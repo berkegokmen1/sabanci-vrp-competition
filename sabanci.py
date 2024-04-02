@@ -1,9 +1,10 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
+SCALE_FACTOR = 10
+
 
 def parse_vrp_instance(file_path, num_vehicles=1):
-    """Parses the VRP instance from a text file."""
     with open(file_path, "r") as file:
         lines = file.readlines()
 
@@ -65,8 +66,8 @@ def print_solution(data, manager, routing, solution):
                 plan_output += " {0} Load({1}) Distance({2}) Time({3}) -> ".format(
                     node_index,
                     solution.Value(capacity_dimension.CumulVar(index)),
-                    solution.Value(distance_dimension.CumulVar(index)) / 10,
-                    solution.Value(time_dimension.CumulVar(index)) / 10,
+                    solution.Value(distance_dimension.CumulVar(index)),
+                    solution.Value(time_dimension.CumulVar(index)),
                 )
 
             index = solution.Value(routing.NextVar(index))  # Move to the next index/node in the route
@@ -74,49 +75,47 @@ def print_solution(data, manager, routing, solution):
         plan_output += " {0} Load({1}) Distance({2}) Time({3})\n".format(
             node_index,
             solution.Value(capacity_dimension.CumulVar(index)),
-            solution.Value(distance_dimension.CumulVar(index)) / 10,
-            solution.Value(time_dimension.CumulVar(index)) / 10,
+            solution.Value(distance_dimension.CumulVar(index)),
+            solution.Value(time_dimension.CumulVar(index)),
         )
 
         plan_output += "Load of the route: {}\n".format(solution.Value(capacity_dimension.CumulVar(index)))
-        plan_output += "Distance of the route: {}m\n".format(
-            solution.Value(distance_dimension.CumulVar(node_index)) / 10
-        )
-        plan_output += "Time of the route: {}m\n".format(solution.Value(time_dimension.CumulVar(node_index)) / 10)
+        plan_output += "Distance of the route: {}\n".format(solution.Value(distance_dimension.CumulVar(node_index)))
+        plan_output += "Time of the route: {}\n".format(solution.Value(time_dimension.CumulVar(node_index)))
 
         print(plan_output)
 
         total_load += solution.Value(capacity_dimension.CumulVar(index))
-        total_distance += solution.Value(distance_dimension.CumulVar(index)) / 10
-        total_time += solution.Value(time_dimension.CumulVar(index)) / 10
+        total_distance += solution.Value(distance_dimension.CumulVar(index))
+        total_time += solution.Value(time_dimension.CumulVar(index))
         total_num_vehicles += solution.Value(distance_dimension.CumulVar(index)) > 0
 
-    print("Objective: {}".format(solution.ObjectiveValue() / 10))
+    print("Objective: {}".format(solution.ObjectiveValue()))
     print("Total Load of all routes: {}".format(total_load))
-    print("Total Distance of all routes: {}m".format(total_distance))
-    print("Total Time of all routes: {}m".format(total_time))
+    print("Total Distance of all routes: {}".format(total_distance))
+    print("Total Time of all routes: {}".format(total_time))
     print("Total Number of used vehicles: {}".format(total_num_vehicles))
 
 
 def compute_euclidean_distance_matrix(locations):
     distances = {}
-    for from_counter, from_node in enumerate(locations):
-        distances[from_counter] = {}
-        for to_counter, to_node in enumerate(locations):
-            # calculate euclidean distance and truncate to one decimal place
-            distances[from_counter][to_counter] = (
-                int(((from_node[0] - to_node[0]) ** 2 + (from_node[1] - to_node[1]) ** 2) ** 0.5 * 10) / 10
-            )
+
+    for from_index, from_xy in enumerate(locations):
+        from_x, from_y = from_xy
+        distances[from_index] = {}
+        for to_index, to_xy in enumerate(locations):
+            to_x, to_y = to_xy
+            distances[from_index][to_index] = int(((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5)
 
     return distances
 
 
-def compute_time_matrix(distances, service_times):
-    time_matrix = {}
-    for from_counter, from_node in distances.items():
-        time_matrix[from_counter] = {}
-        for to_counter, distance in from_node.items():
-            time_matrix[from_counter][to_counter] = distance + (service_times[to_counter])
+def compute_time_matrix(distance_matrix, service_times):
+    time_matrix = distance_matrix.copy()
+
+    for i in range(1, len(service_times)):
+        for j in range(i + 1, len(service_times)):
+            time_matrix[i][j] = time_matrix[j][i] = time_matrix[i][j] + service_times[j]
 
     return time_matrix
 
@@ -130,7 +129,7 @@ def dict_to_list(d):
     # Parse to integer here, divide by 1 to truncate to integer
     # Later in the code when outputting something, divide by 10 to get the original value
     # Work with integers since that's the one supported here...
-    return [[int(d[i][j] * 10) for j in d[i]] for i in d]
+    return [[int(d[i][j]) for j in d[i]] for i in d]
 
 
 def main(file_path):
@@ -173,11 +172,11 @@ def main(file_path):
         routing.AddVariableMinimizedByFinalizer(distance_dimension.CumulVar(routing.End(vehicle)))
 
     time = "Time"
-    horizon = 100000  # waiting time bruh
+    horizon = 1000  # waiting time bruh
     routing.AddDimension(
         time_callback_index,
         horizon,  # allow waiting time
-        999999,  # maximum time per vehicle # TODO adjust?
+        99999,  # maximum time per vehicle # TODO adjust?
         False,  # Don't force start cumul to zero, allow wait time.
         time,
     )
@@ -193,24 +192,19 @@ def main(file_path):
             continue
 
         index = manager.NodeToIndex(location_idx)
-        start, end = [int(tw * 10) for tw in time_window]  # Scale by 10
-        print(start, end, index)
-        time_dimension.CumulVar(index).SetRange(start, end)
+        time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
 
-    depot_idx = data["depot"]
     for vehicle_id in range(data["num_vehicles"]):
         index = routing.Start(vehicle_id)
-        time_dimension.CumulVar(index).SetRange(
-            data["time_windows"][depot_idx][0] * 10, data["time_windows"][depot_idx][1] * 10
-        )
+        time_dimension.CumulVar(index).SetRange(data["time_windows"][0][0], data["time_windows"][0][1])
 
     # Everything is multiplied by 10 to work with integers and be consistent
     routing.SetFixedCostOfAllVehicles(
-        int(calculate_fixed_cost(distance_matrix=distance_matrix, num_customers=len(data["locations"]) - 1) * 10)
+        int(calculate_fixed_cost(distance_matrix=distance_matrix, num_customers=len(data["locations"]) - 1))
     )
 
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-    search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+    search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_MOST_CONSTRAINED_ARC
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     search_parameters.time_limit.seconds = 10
 
