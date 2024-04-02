@@ -109,7 +109,7 @@ def compute_euclidean_distance_matrix(locations):
         distances[from_index] = {}
         for to_index, to_xy in enumerate(locations):
             to_x, to_y = to_xy
-            distances[from_index][to_index] = (((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5)
+            distances[from_index][to_index] = ((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5
 
     return distances
 
@@ -213,7 +213,7 @@ def main(file_path):
     )
 
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-    search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_MOST_CONSTRAINED_ARC
+    search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     search_parameters.time_limit.seconds = 10
 
