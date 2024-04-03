@@ -51,6 +51,8 @@ def print_solution(data, manager, routing, solution):
         index = routing.Start(vehicle_id)
         plan_output = "Route for vehicle {}:\n".format(vehicle_id)
 
+        route_load = 0
+
         first_node = True  # Indicator for the first node in the route
 
         distance_dimension = routing.GetDimensionOrDie("Distance")
@@ -64,34 +66,36 @@ def print_solution(data, manager, routing, solution):
                 plan_output += " {0} (Depot) -> ".format(node_index)
                 first_node = False
             else:
+                route_load += data["demands"][node_index]
+
                 plan_output += " {0} Load({1}) Distance({2}) Time({3}) -> ".format(
                     node_index,
-                    solution.Value(capacity_dimension.CumulVar(node_index)),
+                    route_load,
                     solution.Value(distance_dimension.CumulVar(node_index)) / SCALE_FACTOR,
                     solution.Value(time_dimension.CumulVar(node_index)) / SCALE_FACTOR,
                 )
 
-            prev_index = index
+            prev_index = node_index
             index = solution.Value(routing.NextVar(index))  # Move to the next index/node in the route
 
         node_index = manager.IndexToNode(index)
         plan_output += " {0} Load({1}) Distance({2}) Time({3})\n".format(
             node_index,
             solution.Value(capacity_dimension.CumulVar(node_index)),
-            solution.Value(distance_dimension.CumulVar(node_index)) / SCALE_FACTOR,
-            solution.Value(time_dimension.CumulVar(node_index)) / SCALE_FACTOR,
+            (solution.Value(distance_dimension.CumulVar(node_index))) / SCALE_FACTOR,
+            (solution.Value(time_dimension.CumulVar(node_index))) / SCALE_FACTOR,
         )
 
-        last_node_index = manager.IndexToNode(prev_index)
+        last_node_index = prev_index
 
-        plan_output += "Load of the route: {}\n".format(solution.Value(capacity_dimension.CumulVar(last_node_index)))
+        plan_output += "Load of the route: {}\n".format(route_load)
         plan_output += "Distance of the route: {}\n".format(
             solution.Value(distance_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
         )
         plan_output += "Time of the route: {}\n".format(
             solution.Value(time_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
         )
-
+        print(data["locations"][0][0])
         print(plan_output)
 
         total_load += solution.Value(capacity_dimension.CumulVar(last_node_index))
@@ -114,6 +118,11 @@ def compute_euclidean_distance_matrix(locations):
         distances[from_index] = {}
         for to_index, to_xy in enumerate(locations):
             to_x, to_y = to_xy
+
+            if from_index == to_index:
+                distances[from_index][to_index] = 0
+                continue
+
             distances[from_index][to_index] = int((((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5) * 10) / 10
 
     return distances
