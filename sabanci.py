@@ -95,7 +95,6 @@ def print_solution(data, manager, routing, solution):
         plan_output += "Time of the route: {}\n".format(
             solution.Value(time_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
         )
-        print(data["locations"][0][0])
         print(plan_output)
 
         total_load += solution.Value(capacity_dimension.CumulVar(last_node_index))
