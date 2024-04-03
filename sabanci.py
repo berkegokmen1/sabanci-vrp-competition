@@ -40,7 +40,7 @@ def parse_vrp_instance(file_path, num_vehicles=1):
     }
 
 
-def print_solution(data, manager, routing, solution):
+def print_solution(data, manager, routing, solution, time_matrix, distance_matrix, fixed_cost):
 
     total_load = 0
     total_distance = 0
@@ -75,33 +75,38 @@ def print_solution(data, manager, routing, solution):
                     solution.Value(time_dimension.CumulVar(node_index)) / SCALE_FACTOR,
                 )
 
-            prev_index = node_index
+            prev_node_index = node_index
             index = solution.Value(routing.NextVar(index))  # Move to the next index/node in the route
 
         node_index = manager.IndexToNode(index)
+
+        last_load = route_load
+        last_distance = (
+            solution.Value(distance_dimension.CumulVar(prev_node_index)) + distance_matrix[prev_node_index][node_index]
+        ) / SCALE_FACTOR
+        last_time = (
+            solution.Value(time_dimension.CumulVar(prev_node_index)) + time_matrix[prev_node_index][node_index]
+        ) / SCALE_FACTOR
+
         plan_output += " {0} Load({1}) Distance({2}) Time({3})\n".format(
             node_index,
-            solution.Value(capacity_dimension.CumulVar(node_index)),
-            (solution.Value(distance_dimension.CumulVar(node_index))) / SCALE_FACTOR,
-            (solution.Value(time_dimension.CumulVar(node_index))) / SCALE_FACTOR,
+            last_distance,
+            last_distance,
+            last_time,
         )
-
-        last_node_index = prev_index
 
         plan_output += "Load of the route: {}\n".format(route_load)
-        plan_output += "Distance of the route: {}\n".format(
-            solution.Value(distance_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
-        )
-        plan_output += "Time of the route: {}\n".format(
-            solution.Value(time_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
-        )
+        plan_output += "Distance of the route: {}\n".format(last_distance)
+        plan_output += "Time of the route: {}\n".format(last_time)
+
         print(plan_output)
 
-        total_load += solution.Value(capacity_dimension.CumulVar(last_node_index))
-        total_distance += solution.Value(distance_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
-        total_time += solution.Value(time_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
-        total_num_vehicles += solution.Value(distance_dimension.CumulVar(last_node_index)) > 0
+        total_load += last_load
+        total_distance += last_distance
+        total_time += last_distance
+        total_num_vehicles += last_distance > 0
 
+    print("Fixed Cost: {}".format(fixed_cost / SCALE_FACTOR))
     print("Objective: {}".format(solution.ObjectiveValue() / SCALE_FACTOR))
     print("Total Load of all routes: {}".format(total_load))
     print("Total Distance of all routes: {}".format(total_distance))
@@ -117,10 +122,6 @@ def compute_euclidean_distance_matrix(locations):
         distances[from_index] = {}
         for to_index, to_xy in enumerate(locations):
             to_x, to_y = to_xy
-
-            if from_index == to_index:
-                distances[from_index][to_index] = 0
-                continue
 
             distances[from_index][to_index] = int((((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5) * 10) / 10
 
@@ -240,12 +241,12 @@ def main(file_path, num_vehicles, time_limit):
         )
 
     # Everything is multiplied by 10 to work with integers and be consistent
-    routing.SetFixedCostOfAllVehicles(
-        int(
-            calculate_fixed_cost(distance_matrix=distance_matrix, num_customers=len(data["locations"]) - 1)
-            * SCALE_FACTOR
-        )
+
+    fixed_cost = int(
+        calculate_fixed_cost(distance_matrix=distance_matrix, num_customers=len(data["locations"]) - 1) * SCALE_FACTOR
     )
+
+    routing.SetFixedCostOfAllVehicles(fixed_cost)
 
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
@@ -255,7 +256,7 @@ def main(file_path, num_vehicles, time_limit):
     solution = routing.SolveWithParameters(search_parameters)
 
     if solution:
-        print_solution(data, manager, routing, solution)
+        print_solution(data, manager, routing, solution, time_matrix_list, distance_matrix_list, fixed_cost)
     else:
         print("no solution found xd", routing.status())
 
