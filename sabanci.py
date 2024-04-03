@@ -1,5 +1,6 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
+import argparse
 
 SCALE_FACTOR = 10
 
@@ -137,7 +138,7 @@ def dict_to_list(d):
 
 
 def main(file_path):
-    data = parse_vrp_instance(file_path, num_vehicles=10)
+    data = parse_vrp_instance(file_path, num_vehicles=50)
 
     manager = pywrapcp.RoutingIndexManager(len(data["locations"]), data["num_vehicles"], data["depot"])
 
@@ -215,7 +216,7 @@ def main(file_path):
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    search_parameters.time_limit.seconds = 10
+    search_parameters.time_limit.seconds = 60 * 10
 
     solution = routing.SolveWithParameters(search_parameters)
 
@@ -226,4 +227,8 @@ def main(file_path):
 
 
 if __name__ == "__main__":
-    main(file_path="instance_1.txt")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file-path", type=str, required=True)
+    args = parser.parse_args()
+
+    main(file_path=args.file_path)
