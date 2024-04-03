@@ -66,34 +66,38 @@ def print_solution(data, manager, routing, solution):
             else:
                 plan_output += " {0} Load({1}) Distance({2}) Time({3}) -> ".format(
                     node_index,
-                    solution.Value(capacity_dimension.CumulVar(index)),
-                    solution.Value(distance_dimension.CumulVar(index)) / SCALE_FACTOR,
-                    solution.Value(time_dimension.CumulVar(index)) / SCALE_FACTOR,
+                    solution.Value(capacity_dimension.CumulVar(node_index)),
+                    solution.Value(distance_dimension.CumulVar(node_index)) / SCALE_FACTOR,
+                    solution.Value(time_dimension.CumulVar(node_index)) / SCALE_FACTOR,
                 )
 
+            prev_index = index
             index = solution.Value(routing.NextVar(index))  # Move to the next index/node in the route
 
+        node_index = manager.IndexToNode(index)
         plan_output += " {0} Load({1}) Distance({2}) Time({3})\n".format(
             node_index,
-            solution.Value(capacity_dimension.CumulVar(index)),
-            solution.Value(distance_dimension.CumulVar(index)) / SCALE_FACTOR,
-            solution.Value(time_dimension.CumulVar(index)) / SCALE_FACTOR,
+            solution.Value(capacity_dimension.CumulVar(node_index)),
+            solution.Value(distance_dimension.CumulVar(node_index)) / SCALE_FACTOR,
+            solution.Value(time_dimension.CumulVar(node_index)) / SCALE_FACTOR,
         )
 
-        plan_output += "Load of the route: {}\n".format(solution.Value(capacity_dimension.CumulVar(index)))
+        last_node_index = manager.IndexToNode(prev_index)
+
+        plan_output += "Load of the route: {}\n".format(solution.Value(capacity_dimension.CumulVar(last_node_index)))
         plan_output += "Distance of the route: {}\n".format(
-            solution.Value(distance_dimension.CumulVar(node_index)) / SCALE_FACTOR
+            solution.Value(distance_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
         )
         plan_output += "Time of the route: {}\n".format(
-            solution.Value(time_dimension.CumulVar(node_index)) / SCALE_FACTOR
+            solution.Value(time_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
         )
 
         print(plan_output)
 
-        total_load += solution.Value(capacity_dimension.CumulVar(index))
-        total_distance += solution.Value(distance_dimension.CumulVar(index)) / SCALE_FACTOR
-        total_time += solution.Value(time_dimension.CumulVar(index)) / SCALE_FACTOR
-        total_num_vehicles += solution.Value(distance_dimension.CumulVar(index)) > 0
+        total_load += solution.Value(capacity_dimension.CumulVar(last_node_index))
+        total_distance += solution.Value(distance_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
+        total_time += solution.Value(time_dimension.CumulVar(last_node_index)) / SCALE_FACTOR
+        total_num_vehicles += solution.Value(distance_dimension.CumulVar(last_node_index)) > 0
 
     print("Objective: {}".format(solution.ObjectiveValue() / SCALE_FACTOR))
     print("Total Load of all routes: {}".format(total_load))
@@ -110,7 +114,7 @@ def compute_euclidean_distance_matrix(locations):
         distances[from_index] = {}
         for to_index, to_xy in enumerate(locations):
             to_x, to_y = to_xy
-            distances[from_index][to_index] = ((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5
+            distances[from_index][to_index] = int((((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5) * 10) / 10
 
     return distances
 
@@ -119,7 +123,7 @@ def compute_time_matrix(distance_matrix, service_times):
     time_matrix = distance_matrix.copy()
 
     for i in range(1, len(service_times)):
-        for j in range(i + 1, len(service_times)):
+        for j in range(i, len(service_times)):
             time_matrix[i][j] = time_matrix[j][i] = time_matrix[i][j] + service_times[j]
 
     return time_matrix
@@ -137,8 +141,8 @@ def dict_to_list(d):
     return [[int(d[i][j] * SCALE_FACTOR) for j in d[i]] for i in d]
 
 
-def main(file_path):
-    data = parse_vrp_instance(file_path, num_vehicles=50)
+def main(file_path, num_vehicles, time_limit):
+    data = parse_vrp_instance(file_path=file_path, num_vehicles=num_vehicles)
 
     manager = pywrapcp.RoutingIndexManager(len(data["locations"]), data["num_vehicles"], data["depot"])
 
@@ -147,12 +151,34 @@ def main(file_path):
     distance_matrix = compute_euclidean_distance_matrix(data["locations"])
     time_matrix = compute_time_matrix(distance_matrix, data["service_times"])
 
-    transit_callback_index = routing.RegisterTransitMatrix(dict_to_list(distance_matrix))
-    time_callback_index = routing.RegisterTransitMatrix(dict_to_list(time_matrix))
+    distance_matrix_list = dict_to_list(distance_matrix)
+    time_matrix_list = dict_to_list(time_matrix)
 
+    def distance_callback(from_index, to_index):
+        # Convert from routing variable Index to distance matrix NodeIndex.
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        return distance_matrix_list[from_node][to_node]
+
+    def time_callback(from_index, to_index):
+        # Convert from routing variable Index to distance matrix NodeIndex.
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        return time_matrix_list[from_node][to_node]
+
+    # transit_callback_index = routing.RegisterTransitMatrix(dict_to_list(distance_matrix))
+    # time_callback_index = routing.RegisterTransitMatrix(dict_to_list(time_matrix))
     # routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
-    demand_callback_index = routing.RegisterUnaryTransitVector(data["demands"])
+    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+    time_callback_index = routing.RegisterTransitCallback(time_callback)
+
+    def demand_callback(from_index):
+        from_node = manager.IndexToNode(from_index)
+        return data["demands"][from_node]
+
+    demand_callback_index = routing.RegisterUnaryTransitCallback(demand_callback)
+
     routing.AddDimensionWithVehicleCapacity(
         demand_callback_index,
         0,  # null capacity slack
@@ -216,7 +242,7 @@ def main(file_path):
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    search_parameters.time_limit.seconds = 60 * 10
+    search_parameters.time_limit.seconds = time_limit
 
     solution = routing.SolveWithParameters(search_parameters)
 
@@ -229,6 +255,8 @@ def main(file_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file-path", type=str, required=True)
+    parser.add_argument("--num-vehicles", type=int, required=True)
+    parser.add_argument("--time-limit", type=int, required=True)
     args = parser.parse_args()
 
-    main(file_path=args.file_path)
+    main(file_path=args.file_path, num_vehicles=args.num_vehicles, time_limit=args.time_limit)
