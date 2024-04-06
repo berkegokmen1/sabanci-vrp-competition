@@ -2,7 +2,7 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import argparse
 
-SCALE_FACTOR = 10
+SCALE_FACTOR = 10  # theoritically, this could be any number, but for the sake of simplicity, we will use 10
 
 
 def parse_vrp_instance(file_path, num_vehicles=1):
@@ -34,12 +34,13 @@ def parse_vrp_instance(file_path, num_vehicles=1):
         "demands": demands,
         "time_windows": time_windows,
         "service_times": service_times,
-        "vehicle_capacities": [200] * num_vehicles,
+        "vehicle_capacities": [200] * num_vehicles,  # each vehicle seems to have 200 capacity.
         "num_vehicles": num_vehicles,
-        "depot": 0,
+        "depot": 0,  # depot is always at index 0, could change but who knows...
     }
 
 
+# Not really important. Will have to change this anyways.
 def print_solution(data, manager, routing, solution, time_matrix, distance_matrix, fixed_cost):
 
     total_load = 0
@@ -57,7 +58,6 @@ def print_solution(data, manager, routing, solution, time_matrix, distance_matri
 
         distance_dimension = routing.GetDimensionOrDie("Distance")
         time_dimension = routing.GetDimensionOrDie("Time")
-        capacity_dimension = routing.GetDimensionOrDie("Capacity")
 
         while not routing.IsEnd(index):
             node_index = manager.IndexToNode(index)
@@ -123,6 +123,7 @@ def compute_euclidean_distance_matrix(locations):
         for to_index, to_xy in enumerate(locations):
             to_x, to_y = to_xy
 
+            # Here we use *10 followed by /10 and int() to truncate to 1 decimal place
             distances[from_index][to_index] = int((((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5) * 10) / 10
 
     return distances
@@ -133,6 +134,7 @@ def compute_time_matrix(distance_matrix, service_times):
 
     for i in range(1, len(service_times)):
         for j in range(i, len(service_times)):
+            # Same deal, just add service times on top of those
             time_matrix[i][j] = time_matrix[j][i] = time_matrix[i][j] + service_times[j]
 
     return time_matrix
@@ -143,6 +145,7 @@ def calculate_fixed_cost(distance_matrix, num_customers):
     return 2 * num_customers * c_max
 
 
+# I know this is not the best place to put this SCALE_FACTOR stuff, but I am too busy with projects and it works.
 def dict_to_list(d):
     # Parse to integer here, divide by 1 to truncate to integer
     # Later in the code when outputting something, divide by 10 to get the original value
@@ -153,6 +156,7 @@ def dict_to_list(d):
 def main(file_path, num_vehicles, time_limit):
     data = parse_vrp_instance(file_path=file_path, num_vehicles=num_vehicles)
 
+    # Usuall stuff
     manager = pywrapcp.RoutingIndexManager(len(data["locations"]), data["num_vehicles"], data["depot"])
 
     routing = pywrapcp.RoutingModel(manager)
@@ -160,6 +164,7 @@ def main(file_path, num_vehicles, time_limit):
     distance_matrix = compute_euclidean_distance_matrix(data["locations"])
     time_matrix = compute_time_matrix(distance_matrix, data["service_times"])
 
+    # Here we actually multiply by 10 and have the modified matrixes from now on.
     distance_matrix_list = dict_to_list(distance_matrix)
     time_matrix_list = dict_to_list(time_matrix)
 
@@ -175,12 +180,15 @@ def main(file_path, num_vehicles, time_limit):
         to_node = manager.IndexToNode(to_index)
         return time_matrix_list[from_node][to_node]
 
+    # Unnecessary since we are using the callback functions
     # transit_callback_index = routing.RegisterTransitMatrix(dict_to_list(distance_matrix))
     # time_callback_index = routing.RegisterTransitMatrix(dict_to_list(time_matrix))
-    # routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
     transit_callback_index = routing.RegisterTransitCallback(distance_callback)
     time_callback_index = routing.RegisterTransitCallback(time_callback)
+
+    # Include the total distance travelled in the objective function
+    routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
     def demand_callback(from_index):
         from_node = manager.IndexToNode(from_index)
@@ -212,7 +220,7 @@ def main(file_path, num_vehicles, time_limit):
         routing.AddVariableMinimizedByFinalizer(distance_dimension.CumulVar(routing.End(vehicle)))
 
     time = "Time"
-    horizon = 10000  # waiting time bruh
+    horizon = 10000  # waiting time allowed to vehicles. We do not want to "hard" constraint waiting, so a big number
     routing.AddDimension(
         time_callback_index,
         horizon,  # allow waiting time
@@ -223,10 +231,12 @@ def main(file_path, num_vehicles, time_limit):
 
     time_dimension = routing.GetDimensionOrDie(time)
 
+    # Optimization objectives...
     for vehicle in range(data["num_vehicles"]):
         routing.AddVariableMinimizedByFinalizer(time_dimension.CumulVar(routing.Start(vehicle)))
         routing.AddVariableMinimizedByFinalizer(time_dimension.CumulVar(routing.End(vehicle)))
 
+    # Setting time windows
     for location_idx, time_window in enumerate(data["time_windows"]):
         if location_idx == data["depot"]:
             continue
@@ -241,13 +251,14 @@ def main(file_path, num_vehicles, time_limit):
         )
 
     # Everything is multiplied by 10 to work with integers and be consistent
-
     fixed_cost = int(
         calculate_fixed_cost(distance_matrix=distance_matrix, num_customers=len(data["locations"]) - 1) * SCALE_FACTOR
     )
 
+    # Every vehicle has a fixed cost which is activates for vehicle_i if vehicle_i is used
     routing.SetFixedCostOfAllVehicles(fixed_cost)
 
+    # These are the best, talking after amazing amount of trial and error
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
@@ -258,10 +269,11 @@ def main(file_path, num_vehicles, time_limit):
     if solution:
         print_solution(data, manager, routing, solution, time_matrix_list, distance_matrix_list, fixed_cost)
     else:
-        print("no solution found xd", routing.status())
+        print("no solution found :(", routing.status())
 
 
 if __name__ == "__main__":
+    # Cool cs stuff
     parser = argparse.ArgumentParser()
     parser.add_argument("--file-path", type=str, required=True)
     parser.add_argument("--num-vehicles", type=int, required=True)
