@@ -1,0 +1,306 @@
+Route for vehicle 0:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 1:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 2:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 3:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 4:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 5:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 6:
+ 0 (Depot) ->  47 Load(27) Distance(0.0) Time(51.0) ->  31 Load(54) Distance(0.0) Time(51.0) ->  11 Load(66) Distance(0.0) Time(67.0) ->  16 Load(85) Distance(0.0) Time(75.0) ->  6 Load(88) Distance(0.0) Time(99.0) ->  3 Load(101) Distance(0.0) Time(116.0) ->  34 Load(115) Distance(0.0) Time(117.0) ->  49 Load(145) Distance(0.0) Time(117.0) ->  48 Load(181) Distance(0.0) Time(165.0) ->  0 Load(27.8) Distance(27.8) Time(192.8)
+Load of the route: 181
+Distance of the route: 27.8
+Time of the route: 192.8
+
+Route for vehicle 7:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 8:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 9:
+ 0 (Depot) ->  45 Load(16) Distance(0.0) Time(32.0) ->  42 Load(21) Distance(0.0) Time(32.0) ->  36 Load(26) Distance(0.0) Time(41.0) ->  5 Load(52) Distance(0.0) Time(41.0) ->  28 Load(68) Distance(0.0) Time(41.0) ->  33 Load(79) Distance(0.0) Time(41.0) ->  14 Load(99) Distance(0.0) Time(41.0) ->  19 Load(116) Distance(0.0) Time(76.0) ->  7 Load(121) Distance(0.0) Time(81.0) ->  40 Load(130) Distance(0.0) Time(85.0) ->  8 Load(139) Distance(0.0) Time(95.0) ->  50 Load(152) Distance(0.0) Time(124.0) ->  20 Load(161) Distance(0.0) Time(126.0) ->  46 Load(162) Distance(0.0) Time(126.0) ->  17 Load(164) Distance(0.0) Time(157.0) ->  0 Load(30.4) Distance(30.4) Time(187.4)
+Load of the route: 164
+Distance of the route: 30.4
+Time of the route: 187.4
+
+Route for vehicle 10:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 11:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 12:
+ 0 (Depot) ->  27 Load(16) Distance(0.0) Time(37.0) ->  39 Load(47) Distance(0.0) Time(44.0) ->  2 Load(54) Distance(0.0) Time(50.0) ->  30 Load(75) Distance(0.0) Time(71.0) ->  29 Load(84) Distance(0.0) Time(71.0) ->  9 Load(100) Distance(0.0) Time(97.0) ->  18 Load(112) Distance(0.0) Time(97.0) ->  22 Load(130) Distance(0.0) Time(97.0) ->  41 Load(135) Distance(0.0) Time(97.0) ->  13 Load(158) Distance(0.0) Time(159.0) ->  4 Load(177) Distance(0.0) Time(159.0) ->  0 Load(25.0) Distance(25.0) Time(184.0)
+Load of the route: 177
+Distance of the route: 25.0
+Time of the route: 184.0
+
+Route for vehicle 13:
+ 0 (Depot) ->  44 Load(18) Distance(0.0) Time(69.0) ->  23 Load(47) Distance(0.0) Time(69.0) ->  21 Load(58) Distance(0.0) Time(69.0) ->  15 Load(66) Distance(0.0) Time(69.0) ->  12 Load(85) Distance(0.0) Time(69.0) ->  38 Load(101) Distance(0.0) Time(83.0) ->  37 Load(109) Distance(0.0) Time(134.0) ->  10 Load(125) Distance(0.0) Time(134.0) ->  26 Load(142) Distance(0.0) Time(134.0) ->  32 Load(165) Distance(0.0) Time(141.0) ->  43 Load(172) Distance(0.0) Time(141.0) ->  35 Load(180) Distance(0.0) Time(143.0) ->  1 Load(190) Distance(0.0) Time(161.0) ->  24 Load(193) Distance(0.0) Time(161.0) ->  25 Load(199) Distance(0.0) Time(172.0) ->  0 Load(33.5) Distance(33.5) Time(205.5)
+Load of the route: 199
+Distance of the route: 33.5
+Time of the route: 205.5
+
+Route for vehicle 14:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 15:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 16:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 17:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 18:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 19:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 20:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 21:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 22:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 23:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 24:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 25:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 26:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 27:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 28:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 29:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 30:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 31:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 32:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 33:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 34:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 35:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 36:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 37:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 38:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 39:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 40:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 41:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 42:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 43:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 44:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 45:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 46:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 47:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 48:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Route for vehicle 49:
+ 0 (Depot) ->  0 Load(0.0) Distance(0.0) Time(0.0)
+Load of the route: 0
+Distance of the route: 0.0
+Time of the route: 0.0
+
+Fixed Cost: 9340.0
+Objective: 37360.0
+Total Load of all routes: 721
+Total Distance of all routes: 116.7
+Total Time of all routes: 116.7
+Total Number of used vehicles: 4

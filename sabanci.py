@@ -2,12 +2,14 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import argparse
 
-SCALE_FACTOR = 10  # theoritically, this could be any number, but for the sake of simplicity, we will use 10
+SCALE_FACTOR = 10  # theoritically, this could be any number as long as it's greater than 10, but for the sake of simplicity, we will use 10
 
 
 def parse_vrp_instance(file_path, num_vehicles=1):
     with open(file_path, "r") as file:
         lines = file.readlines()
+
+    vehicle_capacity = int(lines[1])
 
     start_index = 0
     for i, line in enumerate(lines):
@@ -34,14 +36,54 @@ def parse_vrp_instance(file_path, num_vehicles=1):
         "demands": demands,
         "time_windows": time_windows,
         "service_times": service_times,
-        "vehicle_capacities": [200] * num_vehicles,  # each vehicle seems to have 200 capacity.
+        "vehicle_capacities": [vehicle_capacity] * num_vehicles,
         "num_vehicles": num_vehicles,
         "depot": 0,  # depot is always at index 0, could change but who knows...
     }
 
 
-# Not really important. Will have to change this anyways.
 def print_solution(data, manager, routing, solution, time_matrix, distance_matrix, fixed_cost):
+    """
+    Route #1: 5 3 7 8 10 11 9 6 4 2 1 75
+    Route #2: 13 17 18 19 15 16 14 12
+    Route #3: 20 24 25 27 29 30 28 26 23 22 21
+    Route #4: 32 33 31 35 37 38 39 36 34
+    Route #5: 43 42 41 40 44 46 45 48 51 50 52 49 47
+    Route #6: 57 55 54 53 56 58 60 59
+    Route #7: 67 65 63 62 74 72 61 64 68 66 69
+    Route #8: 81 78 76 71 70 73 77 79 80
+    Route #9: 90 87 86 83 82 84 85 88 89 91
+    Route #10: 98 96 95 94 92 93 97 100 99
+    Cost 827.3
+    """
+
+    current_vehicle_index = 1
+
+    for vehicle_id in range(data["num_vehicles"]):
+        index = routing.Start(vehicle_id)
+        index = solution.Value(routing.NextVar(index))
+
+        plan_output = f"Route #{current_vehicle_index}: "
+        vehicle_used = False
+
+        while not routing.IsEnd(index):
+            node_index = manager.IndexToNode(index)
+
+            plan_output += f"{node_index} "
+
+            vehicle_used = True
+
+            index = solution.Value(routing.NextVar(index))  # Move to the next index/node in the route
+
+        if vehicle_used:
+            print(plan_output)
+            current_vehicle_index += 1
+
+    print("Objective: {}".format(solution.ObjectiveValue() / SCALE_FACTOR))
+
+
+# Not really important. Will have to change this anyways.
+def print_solution_debug(data, manager, routing, solution, time_matrix, distance_matrix, fixed_cost):
 
     total_load = 0
     total_distance = 0
