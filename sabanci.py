@@ -1,6 +1,7 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import argparse
+import numpy as np
 
 SCALE_FACTOR = 10  # theoritically, this could be any number as long as it's greater than 10, but for the sake of simplicity, we will use 10
 
@@ -122,46 +123,23 @@ def print_solution_debug(data, manager, routing, solution, time_matrix, distance
 
         node_index = manager.IndexToNode(index)
 
-        last_load = route_load
-        last_distance = (
-            solution.Value(distance_dimension.CumulVar(prev_node_index)) + distance_matrix[prev_node_index][node_index]
-        ) / SCALE_FACTOR
-        last_time = (
-            solution.Value(time_dimension.CumulVar(prev_node_index)) + time_matrix[prev_node_index][node_index]
-        ) / SCALE_FACTOR
-
-        plan_output += " {0} Load({1}) Distance({2}) Time({3})\n".format(
+        plan_output += " {0}\n".format(
             node_index,
-            last_distance,
-            last_distance,
-            last_time,
         )
-
-        plan_output += "Load of the route: {}\n".format(route_load)
-        plan_output += "Distance of the route: {}\n".format(last_distance)
-        plan_output += "Time of the route: {}\n".format(last_time)
 
         print(plan_output)
 
-        total_load += last_load
-        total_distance += last_distance
-        total_time += last_distance
-        total_num_vehicles += last_distance > 0
-
     print("Fixed Cost: {}".format(fixed_cost / SCALE_FACTOR))
     print("Objective: {}".format(solution.ObjectiveValue() / SCALE_FACTOR))
-    print("Total Load of all routes: {}".format(total_load))
-    print("Total Distance of all routes: {}".format(total_distance))
-    print("Total Time of all routes: {}".format(total_time))
     print("Total Number of used vehicles: {}".format(total_num_vehicles))
 
 
 def compute_euclidean_distance_matrix(locations):
-    distances = {}
+    distances = np.zeros((len(locations), len(locations)))
 
     for from_index, from_xy in enumerate(locations):
         from_x, from_y = from_xy
-        distances[from_index] = {}
+
         for to_index, to_xy in enumerate(locations):
             to_x, to_y = to_xy
 
@@ -169,30 +147,6 @@ def compute_euclidean_distance_matrix(locations):
             distances[from_index][to_index] = int((((from_x - to_x) ** 2 + (from_y - to_y) ** 2) ** 0.5) * 10) / 10
 
     return distances
-
-
-def compute_time_matrix(distance_matrix, service_times):
-    time_matrix = distance_matrix.copy()
-
-    for i in range(1, len(service_times)):
-        for j in range(i, len(service_times)):
-            # Same deal, just add service times on top of those
-            time_matrix[i][j] = time_matrix[j][i] = time_matrix[i][j] + service_times[j]
-
-    return time_matrix
-
-
-def calculate_fixed_cost(distance_matrix, num_customers):
-    c_max = max(max(row.values()) for row in distance_matrix.values())
-    return 2 * num_customers * c_max
-
-
-# I know this is not the best place to put this SCALE_FACTOR stuff, but I am too busy with projects and it works.
-def dict_to_list(d):
-    # Parse to integer here, divide by 1 to truncate to integer
-    # Later in the code when outputting something, divide by 10 to get the original value
-    # Work with integers since that's the one supported here...
-    return [[int(d[i][j] * SCALE_FACTOR) for j in d[i]] for i in d]
 
 
 def main(file_path, num_vehicles, time_limit):
@@ -204,30 +158,23 @@ def main(file_path, num_vehicles, time_limit):
     routing = pywrapcp.RoutingModel(manager)
 
     distance_matrix = compute_euclidean_distance_matrix(data["locations"])
-    time_matrix = compute_time_matrix(distance_matrix, data["service_times"])
+    time_matrix = np.copy(distance_matrix)
 
-    # Here we actually multiply by 10 and have the modified matrixes from now on.
-    distance_matrix_list = dict_to_list(distance_matrix)
-    time_matrix_list = dict_to_list(time_matrix)
+    distance_matrix_scaled = np.copy(distance_matrix) * SCALE_FACTOR
+    time_matrix_scaled = np.copy(time_matrix) * SCALE_FACTOR
+    service_times_scaled = np.array(data["service_times"]) * SCALE_FACTOR
 
-    def distance_callback(from_index, to_index):
-        # Convert from routing variable Index to distance matrix NodeIndex.
-        from_node = manager.IndexToNode(from_index)
-        to_node = manager.IndexToNode(to_index)
-        return distance_matrix_list[from_node][to_node]
+    distance_matrix_scaled_list = np.copy(distance_matrix_scaled).astype(int).tolist()
+    time_matrix_scaled_list = time_matrix_scaled.astype(int).tolist()
+    service_times_scaled_list = service_times_scaled.astype(int).tolist()
 
     def time_callback(from_index, to_index):
-        # Convert from routing variable Index to distance matrix NodeIndex.
         from_node = manager.IndexToNode(from_index)
         to_node = manager.IndexToNode(to_index)
-        return time_matrix_list[from_node][to_node]
+        return time_matrix_scaled_list[from_node][to_node] + service_times_scaled_list[from_node]
 
-    # Unnecessary since we are using the callback functions
-    # transit_callback_index = routing.RegisterTransitMatrix(dict_to_list(distance_matrix))
-    # time_callback_index = routing.RegisterTransitMatrix(dict_to_list(time_matrix))
-
-    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
     time_callback_index = routing.RegisterTransitCallback(time_callback)
+    transit_callback_index = routing.RegisterTransitMatrix(distance_matrix_scaled_list)
 
     # Include the total distance travelled in the objective function
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
@@ -257,10 +204,6 @@ def main(file_path, num_vehicles, time_limit):
 
     distance_dimension = routing.GetDimensionOrDie(distance)
 
-    for vehicle in range(data["num_vehicles"]):
-        routing.AddVariableMinimizedByFinalizer(distance_dimension.CumulVar(routing.Start(vehicle)))
-        routing.AddVariableMinimizedByFinalizer(distance_dimension.CumulVar(routing.End(vehicle)))
-
     time = "Time"
     horizon = 10000  # waiting time allowed to vehicles. We do not want to "hard" constraint waiting, so a big number
     routing.AddDimension(
@@ -273,29 +216,20 @@ def main(file_path, num_vehicles, time_limit):
 
     time_dimension = routing.GetDimensionOrDie(time)
 
-    # Optimization objectives...
     for vehicle in range(data["num_vehicles"]):
+        routing.AddVariableMinimizedByFinalizer(distance_dimension.CumulVar(routing.Start(vehicle)))
+        routing.AddVariableMinimizedByFinalizer(distance_dimension.CumulVar(routing.End(vehicle)))
+
         routing.AddVariableMinimizedByFinalizer(time_dimension.CumulVar(routing.Start(vehicle)))
         routing.AddVariableMinimizedByFinalizer(time_dimension.CumulVar(routing.End(vehicle)))
 
     # Setting time windows
     for location_idx, time_window in enumerate(data["time_windows"]):
-        if location_idx == data["depot"]:
-            continue
-
         index = manager.NodeToIndex(location_idx)
-        time_dimension.CumulVar(index).SetRange(time_window[0] * SCALE_FACTOR, time_window[1] * SCALE_FACTOR)
+        time_dimension.CumulVar(index).SetRange(int(time_window[0] * SCALE_FACTOR), int(time_window[1] * SCALE_FACTOR))
 
-    for vehicle_id in range(data["num_vehicles"]):
-        index = routing.Start(vehicle_id)
-        time_dimension.CumulVar(index).SetRange(
-            data["time_windows"][0][0] * SCALE_FACTOR, data["time_windows"][0][1] * SCALE_FACTOR
-        )
-
-    # Everything is multiplied by 10 to work with integers and be consistent
-    fixed_cost = int(
-        calculate_fixed_cost(distance_matrix=distance_matrix, num_customers=len(data["locations"]) - 1) * SCALE_FACTOR
-    )
+    max_distance = max([max(row) for row in distance_matrix_scaled_list])
+    fixed_cost = int(max_distance * 2 * (len(data["locations"]) - 1))
 
     # Every vehicle has a fixed cost which is activates for vehicle_i if vehicle_i is used
     routing.SetFixedCostOfAllVehicles(fixed_cost)
@@ -309,7 +243,7 @@ def main(file_path, num_vehicles, time_limit):
     solution = routing.SolveWithParameters(search_parameters)
 
     if solution:
-        print_solution(data, manager, routing, solution, time_matrix_list, distance_matrix_list, fixed_cost)
+        print_solution(data, manager, routing, solution, time_matrix, distance_matrix, fixed_cost)
     else:
         print("no solution found :(", routing.status())
 
