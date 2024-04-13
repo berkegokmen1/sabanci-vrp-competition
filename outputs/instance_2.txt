@@ -1,0 +1,9 @@
+Route #1: 23 22 4 25 
+Route #2: 12 9 20 1 
+Route #3: 14 15 13 
+Route #4: 7 8 17 
+Route #5: 11 19 10 
+Route #6: 5 16 6 
+Route #7: 2 21 3 24 
+Route #8: 18 
+Objective: 28377.1
