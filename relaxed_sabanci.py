@@ -236,8 +236,8 @@ def main(file_path, num_vehicles, time_limit):
         window_length = end - start
         slack = int(0.2 * window_length)
         time_dimension.CumulVar(index).SetRange(start - slack, end + slack)
-        time_dimension.SetCumulVarSoftLowerBound(index, start - slack, EARLY_DELIVERY_COST)
-        time_dimension.SetCumulVarSoftUpperBound(index, end + slack, LATE_DELIVERY_COST)
+        time_dimension.SetCumulVarSoftLowerBound(index, start, EARLY_DELIVERY_COST)
+        time_dimension.SetCumulVarSoftUpperBound(index, end, LATE_DELIVERY_COST)
 
 
     max_distance = max([max(row) for row in distance_matrix_scaled_list])
