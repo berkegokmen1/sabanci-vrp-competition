@@ -5,8 +5,8 @@ import numpy as np
 
 SCALE_FACTOR = 10  # theoritically, this could be any number as long as it's greater than 10, but for the sake of simplicity, we will use 10
 
-EARLY_DELIVERY_COST = 2
-LATE_DELIVERY_COST = 10
+EARLY_DELIVERY_COST = 0.2 * SCALE_FACTOR
+LATE_DELIVERY_COST = 1 * SCALE_FACTOR
 
 
 def parse_vrp_instance(file_path, num_vehicles=1):
